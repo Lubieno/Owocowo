@@ -147,8 +147,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 501a69473f1c608b69e8e0c41c57495f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerThrow
-  maxLifetime: 20
-  playerColor: {r: 0, g: 0, b: 1, a: 1}
+  fruitPrefab: {fileID: 2859379188706174937, guid: 8be0ee3600e600d218314a51ff7e347a, type: 3}
+  throwPoint: {fileID: 2778857579722965553}
+  fpsCamera: {fileID: 0}
+  throwForce: 15
+  upwardForce: 2
+  destroyTime: 10
 --- !u!1 &6066187007153595636
 GameObject:
   m_ObjectHideFlags: 0
