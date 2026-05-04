@@ -66,5 +66,8 @@ public class PlayerMovement : MonoBehaviour
         // Aplikowanie grawitacji, żeby gracz nie unosił się w powietrzu
         velocity.y += gravity * Time.deltaTime;
         controller.Move(velocity * Time.deltaTime);
+
+        string posData = $"POS|{transform.position.x}|{transform.position.y}|{transform.position.z}";
+        FindObjectOfType<UDPNetworkManager>().SendData(posData);
     }
 }
