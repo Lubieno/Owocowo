@@ -55,7 +55,5 @@ public class PlayerThrow : MonoBehaviour
 
             projectile.transform.forward = directionToTarget.normalized;
         }
-        string throwData = "THROW|" + throwPoint.position.ToString() + "|" + directionToTarget.ToString();
-        FindObjectOfType<UDPNetworkManager>().SendData(throwData);
     }
 }

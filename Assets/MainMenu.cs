@@ -1,20 +1,30 @@
 using UnityEngine;
-using UnityEngine.SceneManagement; // Wymagane do przełączania scen
+using Mirror; // Wyrzucamy SceneManagement, wrzucamy Mirrora
 
 public class MainMenu : MonoBehaviour
 {
-    public void PlayGame()
+    // Ten przycisk zastępuje stare "PlayGame"
+    public void PlayAsHost()
     {
-        // Ładuje scenę z grą. Nazwa musi dokładnie pasować do Waszej sceny z rozgrywką!
-        SceneManager.LoadScene("SampleScene");
+        Debug.Log("Uruchamiam serwer i ładuję scenę sieciową...");
+        
+        // Ta jedna linijka robi dwie rzeczy naraz: odpala serwer i automatycznie 
+        // ładuje "SampleScene" (bo ustawiłeś ją w polu Online Scene w Network Managerze)
+        NetworkManager.singleton.StartHost(); 
     }
 
+    // Nowy przycisk dla kolegów
+    public void PlayAsClient()
+    {
+        Debug.Log("Łączę się z serwerem...");
+        NetworkManager.singleton.networkAddress = "localhost"; // Na razie testujemy na jednym PC
+        NetworkManager.singleton.StartClient();
+    }
+
+    // Twoja stara funkcja wyjścia - zostaje całkowicie bez zmian!
     public void QuitGame()
     {
-        // Wypisze tekst w konsoli, żebyśmy widzieli, że przycisk działa w edytorze
         Debug.Log("Gra została wyłączona!");
-
-        // Zamyka grę (zadziała dopiero po zbudowaniu pliku .exe)
         Application.Quit();
     }
 }

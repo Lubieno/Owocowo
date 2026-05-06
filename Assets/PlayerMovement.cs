@@ -67,7 +67,5 @@ public class PlayerMovement : MonoBehaviour
         velocity.y += gravity * Time.deltaTime;
         controller.Move(velocity * Time.deltaTime);
 
-        string posData = $"POS|{transform.position.x}|{transform.position.y}|{transform.position.z}";
-        FindObjectOfType<UDPNetworkManager>().SendData(posData);
     }
 }

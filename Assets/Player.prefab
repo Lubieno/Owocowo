@@ -14,6 +14,8 @@ GameObject:
   - component: {fileID: 5926746695826796765}
   - component: {fileID: 5829742352755641701}
   - component: {fileID: 458086107458672109}
+  - component: {fileID: 1372934188128230368}
+  - component: {fileID: 4281695650449426720}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -149,10 +151,61 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerThrow
   fruitPrefab: {fileID: 2859379188706174937, guid: 8be0ee3600e600d218314a51ff7e347a, type: 3}
   throwPoint: {fileID: 2778857579722965553}
-  fpsCamera: {fileID: 0}
+  fpsCamera: {fileID: 5182860095318468230}
   throwForce: 15
   upwardForce: 2
   destroyTime: 10
+--- !u!114 &1372934188128230368
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 637023771015556077}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b91ecbcc199f4492b9a91e820070131, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Mirror::Mirror.NetworkIdentity
+  sceneId: 0
+  _assetId: 3725963895
+  serverOnly: 0
+  visibility: 0
+  hasSpawned: 0
+--- !u!114 &4281695650449426720
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 637023771015556077}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8ff3ba0becae47b8b9381191598957c8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Mirror.Components::Mirror.NetworkTransformReliable
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
+  target: {fileID: 2778857579722965553}
+  syncPosition: 1
+  syncRotation: 1
+  syncScale: 0
+  onlySyncOnChange: 1
+  compressRotation: 1
+  interpolatePosition: 1
+  interpolateRotation: 1
+  interpolateScale: 1
+  coordinateSpace: 0
+  timelineOffset: 1
+  showGizmos: 0
+  showOverlay: 0
+  overlayColor: {r: 0, g: 0, b: 0, a: 0.5}
+  onlySyncOnChangeCorrectionMultiplier: 2
+  useFixedUpdate: 0
+  rotationSensitivity: 0.01
+  positionPrecision: 0.01
+  scalePrecision: 0.01
 --- !u!1 &6066187007153595636
 GameObject:
   m_ObjectHideFlags: 0
