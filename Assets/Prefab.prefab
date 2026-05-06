@@ -14,7 +14,8 @@ GameObject:
   - component: {fileID: 1437286888086714539}
   - component: {fileID: 3341809123467303403}
   - component: {fileID: -2470362284701308014}
-  m_Layer: 0
+  - component: {fileID: -5191503532926008215}
+  m_Layer: 7
   m_Name: Prefab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -31,7 +32,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.25, y: 0.25, z: 0.25}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -153,5 +154,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2664e49cd67c1fd029645f046414fabb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FruitCollision
-  playerColor: {r: 0, g: 0, b: 1, a: 1}
+  playerColor: {r: 1, g: 0, b: 0.5125599, a: 1}
   destroyDelay: 2
+--- !u!114 &-5191503532926008215
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2859379188706174937}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b91ecbcc199f4492b9a91e820070131, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Mirror::Mirror.NetworkIdentity
+  sceneId: 0
+  _assetId: 2689376567
+  serverOnly: 0
+  visibility: 0
+  hasSpawned: 0

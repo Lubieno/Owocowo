@@ -16,7 +16,7 @@ GameObject:
   - component: {fileID: 458086107458672109}
   - component: {fileID: 1372934188128230368}
   - component: {fileID: 4281695650449426720}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Player
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -133,6 +133,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9156e60aa542ef941884a5bda7e3893a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
   speed: 8
   gravity: -9.81
   mouseSensitivity: 2
@@ -184,7 +187,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8ff3ba0becae47b8b9381191598957c8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Mirror.Components::Mirror.NetworkTransformReliable
-  syncDirection: 0
+  syncDirection: 1
   syncMode: 0
   syncInterval: 0
   target: {fileID: 2778857579722965553}
@@ -218,7 +221,7 @@ GameObject:
   - component: {fileID: 5182860095318468230}
   - component: {fileID: 1729092166967240948}
   - component: {fileID: 397180089898971663}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Main Camera
   m_TagString: MainCamera
   m_Icon: {fileID: 0}
