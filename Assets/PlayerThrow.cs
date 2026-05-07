@@ -1,59 +1,79 @@
 using UnityEngine;
+using Mirror;
 
-public class PlayerThrow : MonoBehaviour
+public class PlayerThrow : NetworkBehaviour
 {
+    [Header("Ustawienia gracza")]
+    public Color myPlayerColor = Color.blue;
+
     [Header("Ustawienia rzutu")]
     public GameObject fruitPrefab;
     public Transform throwPoint;
     public Camera fpsCamera;
     public float throwForce = 15f;
     public float upwardForce = 2f;
-    public float destroyTime = 10f; // NOWE: Zmienna określająca czas życia piłki
+    public float destroyTime = 10f;
 
-    void Update()
+    void Start()
     {
-        if (Input.GetButtonDown("Fire1"))
+        // Skrypt sam szuka punktu rzutu, tak jak zrobiliśmy to przed chwilą
+        if (throwPoint == null)
         {
-            ThrowFruit();
+            throwPoint = transform.Find("MIEJSCE_RZUTU");
         }
     }
 
-    void ThrowFruit()
+    void Update()
     {
-        Ray ray = fpsCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
-        RaycastHit hit;
+        if (!isLocalPlayer) return;
 
-        Vector3 targetPoint;
-
-        if (Physics.Raycast(ray, out hit, 100f))
+        if (Input.GetButtonDown("Fire1"))
         {
-            targetPoint = hit.point;
+            // KLUCZOWA ZMIANA: Zamiast strzelać laserem (który trafiał w gracza), 
+            // pobieramy po prostu wektor przodu naszej kamery!
+            CmdThrowFruit(fpsCamera.transform.forward, myPlayerColor);
         }
-        else
-        {
-            targetPoint = ray.GetPoint(100f);
-        }
+    }
 
-        Vector3 directionToTarget = targetPoint - throwPoint.position;
-
-        // 3. Stworzenie owocu
+    [Command]
+    void CmdThrowFruit(Vector3 lookDirection, Color colorToApply)
+    {
+        // 1. Zespawnuj obiekt
         GameObject projectile = Instantiate(fruitPrefab, throwPoint.position, throwPoint.rotation);
 
-        // --- KLUCZOWA ZMIANA ---
-        // Ta linijka nakazuje Unity usunąć piłkę po 10 sekundach od jej stworzenia
-        Destroy(projectile, destroyTime);
-        // -----------------------
+        // 2. Ustaw kolor
+        FruitCollision fruitLogic = projectile.GetComponent<FruitCollision>();
+        if (fruitLogic != null)
+        {
+            fruitLogic.fruitColor = colorToApply;
+        }
 
+        // 3. NAJPIERW pojawiamy pocisk w sieci
+        NetworkServer.Spawn(projectile);
+
+        // 4. POTEM nadajemy mu fizykę na serwerze
         Rigidbody rb = projectile.GetComponent<Rigidbody>();
-
         if (rb != null)
         {
-            Vector3 forceDirection = directionToTarget.normalized * throwForce;
+            rb.isKinematic = false;
+
+            // Nadajemy prędkość w kierunku patrzenia kamery + lekko w górę
+            Vector3 forceDirection = lookDirection * throwForce;
             forceDirection += Vector3.up * upwardForce;
 
-            rb.AddForce(forceDirection, ForceMode.Impulse);
+            rb.linearVelocity = forceDirection;
+        }
 
-            projectile.transform.forward = directionToTarget.normalized;
+        // 5. Uruchamiamy odliczanie do zniszczenia pocisku
+        StartCoroutine(DestroyProjectileCoroutine(projectile, destroyTime));
+    }
+
+    private System.Collections.IEnumerator DestroyProjectileCoroutine(GameObject proj, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        if (proj != null)
+        {
+            NetworkServer.Destroy(proj);
         }
     }
 }

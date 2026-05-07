@@ -1,12 +1,13 @@
 using UnityEngine;
 using UnityEngine.AI;
+using Mirror; // DODANO
 
 [RequireComponent(typeof(NavMeshAgent))]
-public class SheepWander : MonoBehaviour
+public class SheepWander : NetworkBehaviour // ZMIANA
 {
     [Header("Ustawienia poruszania")]
-    public float wanderRadius = 10f; // Jak daleko może odejść
-    public float wanderTimer = 3f;   // Co ile sekund zmienia kierunek
+    public float wanderRadius = 10f;
+    public float wanderTimer = 3f;
 
     private NavMeshAgent agent;
     private float timer;
@@ -19,27 +20,26 @@ public class SheepWander : MonoBehaviour
 
     void Update()
     {
+        // KLUCZOWA ZMIANA: Tylko serwer może decydować, gdzie idzie owca. 
+        // Klienci będą po prostu oglądać jak idzie, dzięki komponentowi NetworkTransform.
+        if (!isServer) return;
+
         timer += Time.deltaTime;
 
         if (timer >= wanderTimer)
         {
-            // Wyznaczamy nowy losowy punkt na mapie
             Vector3 newPos = RandomNavSphere(transform.position, wanderRadius, -1);
-
-            // Wysyłamy tam owcę
             agent.SetDestination(newPos);
             timer = 0;
         }
     }
 
-    // Funkcja pomocnicza: znajduje losowy, prawidłowy punkt na NavMeshu
     public static Vector3 RandomNavSphere(Vector3 origin, float dist, int layermask)
     {
         Vector3 randDirection = Random.insideUnitSphere * dist;
         randDirection += origin;
 
         NavMeshHit navHit;
-        // Sprawdza, czy losowy punkt faktycznie leży na powierzchni podłogi (NavMesh)
         NavMesh.SamplePosition(randDirection, out navHit, dist, layermask);
 
         return navHit.position;

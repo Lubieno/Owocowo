@@ -1,36 +1,30 @@
 using UnityEngine;
+using Mirror; // DODANO: Obsługa sieci
 
-public class FruitCollision : MonoBehaviour
+public class FruitCollision : NetworkBehaviour // ZMIANA: Z MonoBehaviour na NetworkBehaviour
 {
     [Header("Ustawienia owocu")]
-    public Color playerColor = Color.blue; // Kolor gracza rzucającego
-    public float destroyDelay = 2f; // Czas po jakim owoc znika z mapy po rzucie
+    // Ten kolor będzie nadany przez gracza rzucającego
+    public Color fruitColor = Color.blue;
 
-    void Start()
-    {
-        // Zniszcz owoc po jakimś czasie, żeby nie zaśmiecać pamięci, jeśli w nic nie trafi
-        Destroy(gameObject, destroyDelay);
-    }
-
-    // Ta funkcja odpala się automatycznie, gdy owoc (jego Collider) w coś uderzy
+    // [ServerCallback] sprawia, że fizyka i kolizje (z punktu widzenia gry logicznej) 
+    // są przeliczane TYLKO na serwerze. Zapobiega to podwójnym trafieniom.
+    [ServerCallback]
     private void OnCollisionEnter(Collision collision)
     {
-        // Sprawdzamy, czy uderzony obiekt ma tag "Sheep"
         if (collision.gameObject.CompareTag("Sheep"))
         {
-            // Pobieramy komponent renderujący wygląd owcy
-            MeshRenderer sheepRenderer = collision.gameObject.GetComponent<MeshRenderer>();
+            // Szukamy naszego nowego skryptu na owcy
+            SheepState sheep = collision.gameObject.GetComponent<SheepState>();
 
-            if (sheepRenderer != null)
+            if (sheep != null)
             {
-                // Zmieniamy kolor materiału na kolor gracza
-                sheepRenderer.material.color = playerColor;
-
-                // TODO w przyszłości: Tutaj wyślecie informację do menedżera gry o zdobyciu punktu
+                // Mówimy owcy, żeby przyjęła kolor owocu
+                sheep.ChangeColor(fruitColor);
             }
 
-            // Niszczymy owoc po trafieniu (rozbryzg!)
-            Destroy(gameObject);
+            // Ważne: W sieci używamy NetworkServer.Destroy, a nie zwykłego Destroy!
+            NetworkServer.Destroy(gameObject);
         }
     }
 }

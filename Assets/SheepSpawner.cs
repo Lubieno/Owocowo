@@ -1,15 +1,16 @@
 using UnityEngine;
+using Mirror; // DODANO
 
-public class SheepSpawner : MonoBehaviour
+public class SheepSpawner : NetworkBehaviour // ZMIANA
 {
     [Header("Ustawienia spawnu")]
-    public GameObject sheepPrefab; // Prefab owcy z podpiętym NavMeshAgent i SheepWander
-    public int initialSheepCount = 10; // Ile owiec na start
-    public float spawnRadius = 20f; // Promień od środka mapy, gdzie mogą się pojawić
+    public GameObject sheepPrefab;
+    public int initialSheepCount = 10;
+    public float spawnRadius = 20f;
 
-    void Start()
+    // Używamy OnStartServer zamiast Start - odpali się tylko u Hosta
+    public override void OnStartServer()
     {
-        // Spawnuje początkową ilość owiec przy starcie gry
         for (int i = 0; i < initialSheepCount; i++)
         {
             SpawnSheep();
@@ -18,16 +19,16 @@ public class SheepSpawner : MonoBehaviour
 
     public void SpawnSheep()
     {
-        // Losuje pozycję w obrębie sfery
         Vector3 randomPos = Random.insideUnitSphere * spawnRadius;
         randomPos += transform.position;
-        randomPos.y = 0; // Zakładamy płaską mapę na wysokości 0, żeby owce nie respiły się w powietrzu
+        randomPos.y = 0;
 
-        // Tworzy owcę
-        Instantiate(sheepPrefab, randomPos, Quaternion.identity);
+        GameObject spawnedSheep = Instantiate(sheepPrefab, randomPos, Quaternion.identity);
+
+        // KLUCZOWE: Mówimy Mirrorowi "Hej, stworzyłem owcę, pokaż ją wszystkim!"
+        NetworkServer.Spawn(spawnedSheep);
     }
 
-    // Pomocnicza funkcja do rysowania zasięgu spawnu w Edytorze Unity
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.green;
