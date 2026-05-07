@@ -1,33 +1,38 @@
 using UnityEngine;
-using Mirror; // Obsługa sieci
+using Mirror;
 
 public class SheepState : NetworkBehaviour
 {
-    // [SyncVar] oznacza: "Jeśli serwer zmieni tę zmienną, zaktualizuj ją u wszystkich klientów".
-    // hook = nameof(OnColorChanged) oznacza: "Kiedy dostaniesz nowy kolor, odpal tę funkcję, żeby pomalować model".
     [SyncVar(hook = nameof(OnColorChanged))]
     public Color currentColor = Color.white;
 
-    private MeshRenderer meshRenderer;
+    private Renderer[] allRenderers;
 
     void Awake()
     {
-        meshRenderer = GetComponent<MeshRenderer>();
+        // Szukamy wszystkich rendererów (modelu z Blendera) pod owcą
+        allRenderers = GetComponentsInChildren<Renderer>();
     }
 
-    // Ta funkcja odpala się u KAŻDEGO gracza w momencie zmiany koloru
     void OnColorChanged(Color oldColor, Color newColor)
     {
-        if (meshRenderer != null)
+        // Jeśli Renderery nie zostały znalezione w Awake, szukamy ich teraz
+        if (allRenderers == null || allRenderers.Length == 0)
+            allRenderers = GetComponentsInChildren<Renderer>();
+
+        foreach (Renderer r in allRenderers)
         {
-            meshRenderer.material.color = newColor;
+            if (r != null)
+            {
+                r.material.color = newColor;
+            }
         }
     }
 
-    // [Server] oznacza, że TYLKO serwer może wywołać tę funkcję
     [Server]
     public void ChangeColor(Color newColor)
     {
-        currentColor = newColor; // Zmiana tej zmiennej automatycznie odpali 'OnColorChanged' w sieci
+        Debug.Log($"[SERWER] Zmieniam kolor owcy na: {newColor}");
+        currentColor = newColor;
     }
 }

@@ -1,29 +1,31 @@
 using UnityEngine;
-using Mirror; // DODANO: Obsługa sieci
+using Mirror;
 
-public class FruitCollision : NetworkBehaviour // ZMIANA: Z MonoBehaviour na NetworkBehaviour
+public class FruitCollision : NetworkBehaviour 
 {
     [Header("Ustawienia owocu")]
-    // Ten kolor będzie nadany przez gracza rzucającego
-    public Color fruitColor = Color.blue;
+    // Synchronizujemy kolor, żeby klienci widzieli lecącą kolorową piłkę
+    [SyncVar] public Color fruitColor = Color.blue;
 
-    // [ServerCallback] sprawia, że fizyka i kolizje (z punktu widzenia gry logicznej) 
-    // są przeliczane TYLKO na serwerze. Zapobiega to podwójnym trafieniom.
     [ServerCallback]
     private void OnCollisionEnter(Collision collision)
     {
         if (collision.gameObject.CompareTag("Sheep"))
         {
-            // Szukamy naszego nowego skryptu na owcy
-            SheepState sheep = collision.gameObject.GetComponent<SheepState>();
+            // ZMIANA: Szukamy skryptu na uderzonym obiekcie LUB jego rodzicu
+            // To kluczowe, gdy owoc trafi w model z Blendera (dziecko)
+            SheepState sheep = collision.gameObject.GetComponentInParent<SheepState>();
 
             if (sheep != null)
             {
-                // Mówimy owcy, żeby przyjęła kolor owocu
+                Debug.Log("[SERWER] Trafiono owcę, zmieniam kolor!");
                 sheep.ChangeColor(fruitColor);
             }
+            else
+            {
+                Debug.LogWarning("[SERWER] Trafiono obiekt z tagiem Sheep, ale nie znaleziono SheepState!");
+            }
 
-            // Ważne: W sieci używamy NetworkServer.Destroy, a nie zwykłego Destroy!
             NetworkServer.Destroy(gameObject);
         }
     }
