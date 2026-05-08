@@ -16,6 +16,7 @@ GameObject:
   - component: {fileID: 458086107458672109}
   - component: {fileID: 1372934188128230368}
   - component: {fileID: 4281695650449426720}
+  - component: {fileID: -5643747596661245388}
   m_Layer: 6
   m_Name: Player
   m_TagString: Untagged
@@ -140,6 +141,7 @@ MonoBehaviour:
   syncInterval: 0
   speed: 8
   gravity: -9.81
+  jumpHeight: 1.5
   mouseSensitivity: 2
   playerCamera: {fileID: 4281602398910846671}
 --- !u!114 &458086107458672109
@@ -215,6 +217,21 @@ MonoBehaviour:
   rotationSensitivity: 0.01
   positionPrecision: 0.01
   scalePrecision: 0.01
+--- !u!114 &-5643747596661245388
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 637023771015556077}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bcfe2230cb662694982a385efe0ae99e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerEffects
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
 --- !u!1 &6066187007153595636
 GameObject:
   m_ObjectHideFlags: 0
@@ -366,7 +383,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: c1a9d7c06cd7fb942b821e5810b8745c, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.837
+      value: -0.852
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: c1a9d7c06cd7fb942b821e5810b8745c, type: 3}
       propertyPath: m_LocalPosition.z

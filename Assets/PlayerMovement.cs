@@ -7,10 +7,11 @@ public class PlayerMovement : NetworkBehaviour
     [Header("Ustawienia ruchu")]
     public float speed = 8f;
     public float gravity = -9.81f;
+    public float jumpHeight = 3f; // NOWE: Zmienna określająca wysokość skoku w metrach
 
     [Header("Ustawienia kamery (FPS)")]
-    public float mouseSensitivity = 2f; 
-    public Transform playerCamera;      
+    public float mouseSensitivity = 2f;
+    public Transform playerCamera;
 
     private CharacterController controller;
     private Vector3 velocity;
@@ -25,7 +26,6 @@ public class PlayerMovement : NetworkBehaviour
         // ==========================================
         if (!isLocalPlayer)
         {
-            // Jeśli to "cudza" postać wyłączamy jej kamerę i uszy
             if (playerCamera != null)
             {
                 playerCamera.GetComponent<Camera>().enabled = false;
@@ -34,7 +34,6 @@ public class PlayerMovement : NetworkBehaviour
         }
         else
         {
-            // Tylko na naszym komputerze blokujemy kursor
             Cursor.lockState = CursorLockMode.Locked;
         }
     }
@@ -42,33 +41,44 @@ public class PlayerMovement : NetworkBehaviour
     void Update()
     {
         if (!isLocalPlayer) return;
-        
-        // ==========================================
-        // 1. ROZGLĄDANIE SIĘ (MYSZKA)
-        // ==========================================
-        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
-        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
 
-        xRotation -= mouseY;
-        xRotation = Mathf.Clamp(xRotation, -90f, 90f);
+        // 1. Sprawdzenie ziemi na samym początku klatki
+        bool groundedPlayer = controller.isGrounded;
 
-        if (playerCamera != null)
+        if (groundedPlayer && velocity.y < 0)
         {
-            playerCamera.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
+            // Ważne: dajemy -2f, żeby postać była "dociskana" do ziemi.
+            // Jeśli dasz 0, isGrounded będzie migać (true/false).
+            velocity.y = -2f;
         }
 
+        // 2. Rozglądanie się (bez zmian)
+        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
+        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
+        xRotation -= mouseY;
+        xRotation = Mathf.Clamp(xRotation, -90f, 90f);
+        if (playerCamera != null) playerCamera.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
         transform.Rotate(Vector3.up * mouseX);
 
-        // ==========================================
-        // 2. CHODZENIE (KLAWIATURA)
-        // ==========================================
+        // 3. Obliczanie kierunku chodzenia
         float x = Input.GetAxis("Horizontal");
         float z = Input.GetAxis("Vertical");
+        Vector3 moveDirection = transform.right * x + transform.forward * z;
 
-        Vector3 move = transform.right * x + transform.forward * z;
-        controller.Move(move * speed * Time.deltaTime);
+        // 4. Skakanie
+        // Sprawdzamy groundedPlayer, które pobraliśmy na początku klatki
+        if (Input.GetButtonDown("Jump") && groundedPlayer)
+        {
+            // Wzór na skok: pierwiastek z (wysokość * -2 * grawitacja)
+            velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+        }
 
+        // 5. Aplikowanie grawitacji do prędkości pionowej
         velocity.y += gravity * Time.deltaTime;
-        controller.Move(velocity * Time.deltaTime);
+
+        // 6. KLUCZ: Łączymy ruch poziomy i pionowy w JEDEN wykonany ruch
+        // To gwarantuje, że grawitacja zawsze "pcha" nas w ziemię, aktualizując isGrounded
+        Vector3 finalMove = moveDirection * speed + velocity;
+        controller.Move(finalMove * Time.deltaTime);
     }
 }

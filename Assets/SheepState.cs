@@ -24,6 +24,15 @@ public class SheepState : NetworkBehaviour
         {
             if (r != null)
             {
+                // --- KLUCZOWA ZMIANA: FILTROWANIE GŁOWY ---
+                // Sprawdzamy, czy nazwa obiektu zawiera słowo "Head" lub "Glowa".
+                // Jeśli Twój obiekt w Unity nazywa się inaczej (np. "SheepHead"), wpisz to tutaj!
+                if (r.gameObject.name.Contains("head"))
+                {
+                    continue; // To słowo sprawia, że skrypt pomija ten element i nie zmienia jego koloru
+                }
+
+                // Jeśli to nie jest głowa, normalnie zmieniamy kolor
                 r.material.color = newColor;
             }
         }
