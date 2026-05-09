@@ -28,19 +28,23 @@ public class PlayerThrow : NetworkBehaviour
 
         if (Input.GetButtonDown("Fire1"))
         {
-            // --- ZMIANA: Pobieramy nazwę gracza z systemu Profili ---
+            // Pobieramy nazwę gracza z profilu
             string myName = "Nieznajomy";
             if (ProfileManager.Instance != null && ProfileManager.Instance.currentProfile != null)
             {
                 myName = ProfileManager.Instance.currentProfile.playerName;
             }
 
-            CmdThrowFruit(fpsCamera.transform.forward, myPlayerColor, myName);
+            // Sprawdzamy czy mamy booster podwójnych punktów
+            PlayerEffects effects = GetComponent<PlayerEffects>();
+            bool isDouble = (effects != null && effects.hasScoreMultiplier);
+
+            CmdThrowFruit(fpsCamera.transform.forward, myPlayerColor, myName, isDouble);
         }
     }
 
     [Command]
-    void CmdThrowFruit(Vector3 lookDirection, Color colorToApply, string throwerName)
+    void CmdThrowFruit(Vector3 lookDirection, Color colorToApply, string throwerName, bool isDoublePoints)
     {
         GameObject projectile = Instantiate(fruitPrefab, throwPoint.position, throwPoint.rotation);
 
@@ -48,8 +52,8 @@ public class PlayerThrow : NetworkBehaviour
         if (fruitLogic != null)
         {
             fruitLogic.fruitColor = colorToApply;
-            // --- ZMIANA: Przekazujemy nazwę rzucającego do owocu ---
             fruitLogic.throwerName = throwerName;
+            fruitLogic.doublePoints = isDoublePoints; // Przekazujemy info o boosterze do pocisku
         }
 
         NetworkServer.Spawn(projectile);
@@ -60,7 +64,7 @@ public class PlayerThrow : NetworkBehaviour
             rb.isKinematic = false;
             Vector3 forceDirection = lookDirection * throwForce;
             forceDirection += Vector3.up * upwardForce;
-            rb.linearVelocity = forceDirection; // używam standardowego .velocity dla starszych wersji, ale linearVelocity jest super w Unity 6
+            rb.linearVelocity = forceDirection;
         }
 
         StartCoroutine(DestroyProjectileCoroutine(projectile, destroyTime));

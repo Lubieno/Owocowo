@@ -4,7 +4,8 @@ using Mirror;
 public class FruitCollision : NetworkBehaviour
 {
     [SyncVar] public Color fruitColor = Color.blue;
-    [SyncVar] public string throwerName = ""; // --- DODANE: Pamięta, kto rzucił ---
+    [SyncVar] public string throwerName = "";
+    [SyncVar] public bool doublePoints = false; // Czy ten owoc daje x2 pkt
 
     [ServerCallback]
     private void OnCollisionEnter(Collision collision)
@@ -15,8 +16,8 @@ public class FruitCollision : NetworkBehaviour
 
             if (sheep != null)
             {
-                // --- ZMIANA: Przekazujemy również nazwę gracza ---
-                sheep.ChangeColor(fruitColor, throwerName);
+                // Przekazujemy kolor, nazwę gracza oraz informację o boosterze
+                sheep.ChangeColor(fruitColor, throwerName, doublePoints);
             }
 
             NetworkServer.Destroy(gameObject);

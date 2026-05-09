@@ -19,7 +19,7 @@ GameObject:
   - component: {fileID: -5643747596661245388}
   m_Layer: 6
   m_Name: Player
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -232,6 +232,7 @@ MonoBehaviour:
   syncDirection: 0
   syncMode: 0
   syncInterval: 0
+  hasScoreMultiplier: 0
 --- !u!1 &6066187007153595636
 GameObject:
   m_ObjectHideFlags: 0

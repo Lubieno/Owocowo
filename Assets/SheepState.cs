@@ -6,8 +6,8 @@ public class SheepState : NetworkBehaviour
     [SyncVar(hook = nameof(OnColorChanged))]
     public Color currentColor = Color.white;
 
-    // --- ZMIANA: Owca pamięta obecnego właściciela ---
     [SyncVar] public string currentOwner = "";
+    [SyncVar] public int currentSheepValue = 1; // Ile punktów jest warta ta owca (1 lub 2)
 
     private Renderer[] allRenderers;
 
@@ -32,24 +32,27 @@ public class SheepState : NetworkBehaviour
     }
 
     [Server]
-    public void ChangeColor(Color newColor, string newOwnerName)
+    public void ChangeColor(Color newColor, string newOwnerName, bool isDoublePoints)
     {
-        // Jeśli ten sam gracz ponownie trafił swoją owcę, nic nie robimy
         if (currentOwner == newOwnerName) return;
 
-        // Jeśli owca miała wcześniej innego właściciela, ODBIERZ MU PUNKT
+        // 1. Odejmij punkty poprzedniemu właścicielowi (tyle ile owca była warta)
         if (!string.IsNullOrEmpty(currentOwner))
         {
             if (ScoreManager.Instance != null)
-                ScoreManager.Instance.ChangeScore(currentOwner, -1);
+                ScoreManager.Instance.ChangeScore(currentOwner, -currentSheepValue);
         }
 
-        // Dodaj punkt NOWEMU właścicielowi
-        if (ScoreManager.Instance != null)
-            ScoreManager.Instance.ChangeScore(newOwnerName, 1);
+        // 2. Oblicz nową wartość punktową (zależy od boostera rzucającego)
+        int pointsToGive = isDoublePoints ? 2 : 1;
 
-        // Zaktualizuj stan owcy
+        // 3. Dodaj punkty nowemu właścicielowi
+        if (ScoreManager.Instance != null)
+            ScoreManager.Instance.ChangeScore(newOwnerName, pointsToGive);
+
+        // 4. Zaktualizuj stan owcy
         currentOwner = newOwnerName;
+        currentSheepValue = pointsToGive; // Owca "zapamiętuje" swoją nową wartość
         currentColor = newColor;
     }
 }

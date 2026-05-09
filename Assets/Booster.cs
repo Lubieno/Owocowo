@@ -1,20 +1,18 @@
 using UnityEngine;
 using Mirror;
 
-public enum BoosterType { Speed, DoubleJump, SuperJump }
+public enum BoosterType { Speed, ScoreMultiplier }
 
 public class Booster : NetworkBehaviour
 {
-    // SyncVar informuje wszystkich klientów, jakiego typu jest ten booster
     [SyncVar(hook = nameof(OnTypeChanged))]
     public BoosterType type;
 
     public float duration = 10f;
 
-    [Header("Wygląd Boosterów (Przypisz w Inspektorze)")]
-    public Material speedMaterial;       // np. Czerwony
-    public Material doubleJumpMaterial;  // np. Niebieski
-    public Material superJumpMaterial;   // np. Zielony
+    [Header("Materiały Wyglądu")]
+    public Material speedMaterial;    // Przypisz np. czerwony
+    public Material scoreMaterial;   // Przypisz np. żółty
 
     private Renderer meshRenderer;
 
@@ -25,24 +23,21 @@ public class Booster : NetworkBehaviour
 
     public override void OnStartServer()
     {
-        // Serwer losuje typ boostera w momencie jego pojawienia się na mapie
-        type = (BoosterType)Random.Range(0, 3);
+        // Losujemy typ przy spawnie
+        type = (BoosterType)Random.Range(0, 2);
     }
 
-    // Ta funkcja odpala się u KAŻDEGO gracza, zmieniając kolor modelu
     void OnTypeChanged(BoosterType oldType, BoosterType newType)
     {
         if (meshRenderer == null) return;
 
-        switch (newType)
-        {
-            case BoosterType.Speed: meshRenderer.material = speedMaterial; break;
-            case BoosterType.DoubleJump: meshRenderer.material = doubleJumpMaterial; break;
-            case BoosterType.SuperJump: meshRenderer.material = superJumpMaterial; break;
-        }
+        if (newType == BoosterType.Speed)
+            meshRenderer.material = speedMaterial;
+        else
+            meshRenderer.material = scoreMaterial;
     }
 
-    [ServerCallback] // Tylko serwer przetwarza podniesienie
+    [ServerCallback]
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Player"))
@@ -51,7 +46,7 @@ public class Booster : NetworkBehaviour
             if (effects != null)
             {
                 effects.ApplyBooster(type, duration);
-                NetworkServer.Destroy(gameObject); // Usuwamy z mapy po podniesieniu
+                NetworkServer.Destroy(gameObject);
             }
         }
     }

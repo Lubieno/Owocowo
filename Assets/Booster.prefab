@@ -132,8 +132,7 @@ MonoBehaviour:
   type: 0
   duration: 10
   speedMaterial: {fileID: 2100000, guid: 38f247f8adca21d02ab1c9f75f559779, type: 2}
-  doubleJumpMaterial: {fileID: 2100000, guid: 751c99b65ec3eb6b489926ea9b48eeda, type: 2}
-  superJumpMaterial: {fileID: 2100000, guid: 38f247f8adca21d02ab1c9f75f559779, type: 2}
+  scoreMaterial: {fileID: 2100000, guid: 38f247f8adca21d02ab1c9f75f559779, type: 2}
 --- !u!114 &1382502865864419482
 MonoBehaviour:
   m_ObjectHideFlags: 0

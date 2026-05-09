@@ -5,7 +5,7 @@ using Mirror;
 public class PlayerMovement : NetworkBehaviour
 {
     [Header("Ustawienia ruchu")]
-    public float speed = 8f;
+    [SyncVar] public float speed = 8f;
     public float gravity = -9.81f;
     public float jumpHeight = 3f; // NOWE: Zmienna określająca wysokość skoku w metrach
 
