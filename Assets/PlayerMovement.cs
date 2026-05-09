@@ -4,10 +4,18 @@ using Mirror;
 [RequireComponent(typeof(CharacterController))]
 public class PlayerMovement : NetworkBehaviour
 {
-    [Header("Ustawienia ruchu")]
-    [SyncVar] public float speed = 8f; // Zsynchronizowane do boosterów
-    public float gravity = -9.81f;
-    public float jumpHeight = 3f;
+    [Header("Prędkość bazy (Zsynchronizowana z Boosterami)")]
+    [SyncVar] public float speed = 8f;
+
+    [Header("Fizyka w stylu CS:GO")]
+    public float gravity = 20f;
+    public float jumpForce = 8f;
+    public float friction = 6f; // Tarcie na ziemi
+    public float groundAcceleration = 14f;
+
+    // Magia Bhopa - te dwie wartości decydują o airstrafingu!
+    public float airAcceleration = 2000f;
+    public float maxAirSpeed = 2f;
 
     [Header("Ustawienia kamery (FPS)")]
     public float mouseSensitivity = 2f;
@@ -39,51 +47,119 @@ public class PlayerMovement : NetworkBehaviour
     {
         if (!isLocalPlayer) return;
 
-        // 1. Sprawdzenie ziemi
-        bool groundedPlayer = controller.isGrounded;
-        if (groundedPlayer && velocity.y < 0)
-        {
-            velocity.y = -2f;
-        }
-
-        // Zmienne sterujące - domyślnie 0 (brak ruchu)
         float x = 0f;
         float z = 0f;
         float mouseX = 0f;
         float mouseY = 0f;
         bool jumpPressed = false;
 
-        // --- KLUCZOWA ZMIANA ---
-        // Zczytujemy klawiaturę i myszkę TYLKO wtedy, gdy menu NIE jest zapauzowane
         if (!PauseMenu.isPaused)
         {
-            x = Input.GetAxis("Horizontal");
-            z = Input.GetAxis("Vertical");
+            // UWAGA: Używamy GetAxisRaw zamiast GetAxis, żeby usunąć sztuczne opóźnienie klawiatury Unity
+            x = Input.GetAxisRaw("Horizontal");
+            z = Input.GetAxisRaw("Vertical");
+
             mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
             mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
-            jumpPressed = Input.GetButtonDown("Jump");
+
+            // Auto-Bhop (Trzymając spację, skaczesz od razu). 
+            // Jeśli chcesz trudnego, klasycznego bhopa z CS'a, zmień GetButton na GetButtonDown!
+            jumpPressed = Input.GetButton("Jump");
         }
 
-        // 2. Rozglądanie się (jeśli zapauzowane, mouseX i mouseY wynoszą 0, więc kamera stoi)
+        // Rozglądanie się kamery
         xRotation -= mouseY;
         xRotation = Mathf.Clamp(xRotation, -90f, 90f);
         if (playerCamera != null) playerCamera.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
         transform.Rotate(Vector3.up * mouseX);
 
-        // 3. Obliczanie kierunku chodzenia (jeśli zapauzowane, x i z wynoszą 0, więc nie idziemy)
-        Vector3 moveDirection = transform.right * x + transform.forward * z;
+        // Chciany kierunek ruchu (WishDir)
+        Vector3 wishDir = transform.right * x + transform.forward * z;
+        wishDir.Normalize();
 
-        // 4. Skakanie
-        if (jumpPressed && groundedPlayer)
+        // Serce silnika fizycznego - podział na ziemię i powietrze
+        if (controller.isGrounded)
         {
-            velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+            GroundMove(wishDir, jumpPressed);
+        }
+        else
+        {
+            AirMove(wishDir);
         }
 
-        // 5. Aplikowanie grawitacji (DZIAŁA ZAWSZE, NAWET W MENU!)
-        velocity.y += gravity * Time.deltaTime;
+        // Fizyczne przesunięcie postaci
+        controller.Move(velocity * Time.deltaTime);
+    }
 
-        // 6. Wykonanie ruchu (DZIAŁA ZAWSZE, uziemiając gracza)
-        Vector3 finalMove = moveDirection * speed + velocity;
-        controller.Move(finalMove * Time.deltaTime);
+    // --- FIZYKA ZIEMI ---
+    void GroundMove(Vector3 wishDir, bool jumpPressed)
+    {
+        ApplyFriction(); // Tarcie działa tylko na ziemi
+
+        // Zwiększamy prędkość do wartości "speed" (limit, który boostery mogą zmieniać)
+        Accelerate(wishDir, speed, groundAcceleration);
+
+        // Lekkie dociskanie do ziemi, żeby nie skakać na mikroskopijnych nierównościach
+        velocity.y = -2f;
+
+        if (jumpPressed)
+        {
+            velocity.y = jumpForce; // Wybicie w powietrze!
+        }
+    }
+
+    // --- FIZYKA POWIETRZA ---
+    void AirMove(Vector3 wishDir)
+    {
+        // W powietrzu używamy ogromnego przyspieszenia (airAcceleration), 
+        // ale bardzo małego limitu bezpośredniej prędkości z klawiszy (maxAirSpeed).
+        // To zmusza gracza do skręcania kamerą, aby budować prędkość!
+        Accelerate(wishDir, maxAirSpeed, airAcceleration);
+
+        // Grawitacja
+        velocity.y -= gravity * Time.deltaTime;
+    }
+
+    // --- MATEMATYKA SILNIKA SOURCE (Quake / CS:GO) ---
+    void Accelerate(Vector3 wishDir, float wishSpeed, float accel)
+    {
+        // Sprawdzamy, ile prędkości już mamy w chcianym kierunku
+        float currentSpeed = Vector3.Dot(new Vector3(velocity.x, 0, velocity.z), wishDir);
+
+        // Ile brakuje nam do limitu?
+        float addSpeed = wishSpeed - currentSpeed;
+
+        if (addSpeed <= 0) return; // Jeśli przekraczamy limit w tym kierunku, nie dodajemy sztucznie więcej
+
+        // Obliczamy przyspieszenie dla tej klatki
+        float accelSpeed = accel * Time.deltaTime * wishSpeed;
+        if (accelSpeed > addSpeed) accelSpeed = addSpeed;
+
+        // Dodajemy wyliczoną prędkość do głównego wektora
+        velocity.x += wishDir.x * accelSpeed;
+        velocity.z += wishDir.z * accelSpeed;
+    }
+
+    void ApplyFriction()
+    {
+        Vector3 vec = velocity;
+        vec.y = 0f; // Tarcie nie wpływa na spadanie
+        float speedMag = vec.magnitude;
+        float drop = 0f;
+
+        // Im szybciej biegniesz, tym mocniej działa tarcie
+        if (controller.isGrounded)
+        {
+            float control = speedMag < friction ? friction : speedMag;
+            drop = control * friction * Time.deltaTime;
+        }
+
+        float newSpeed = speedMag - drop;
+        if (newSpeed < 0) newSpeed = 0;
+        if (speedMag > 0) newSpeed /= speedMag;
+
+        // Skalowanie wektora po odjęciu tarcia
+        velocity.x *= newSpeed;
+        velocity.z *= newSpeed;
     }
 }

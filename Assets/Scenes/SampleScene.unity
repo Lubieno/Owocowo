@@ -570,8 +570,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5dea19ee80f0de79ba008920ac6fadfe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UIManager
-  timerText: {fileID: 1291832704}
-  gameTime: 120
 --- !u!4 &248779275
 Transform:
   m_ObjectHideFlags: 0
@@ -2159,6 +2157,7 @@ GameObject:
   - component: {fileID: 1301486966}
   - component: {fileID: 1301486968}
   - component: {fileID: 1301486967}
+  - component: {fileID: 1301486969}
   m_Layer: 0
   m_Name: NetworkScoreManager
   m_TagString: Untagged
@@ -2213,6 +2212,23 @@ MonoBehaviour:
   syncDirection: 0
   syncMode: 0
   syncInterval: 0
+--- !u!114 &1301486969
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1301486965}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2cebab2ea79ff3f4c8b1b90b935da465, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NetworkTimer
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
+  matchDuration: 120
+  timerText: {fileID: 1291832704}
 --- !u!1 &1306849514
 GameObject:
   m_ObjectHideFlags: 0

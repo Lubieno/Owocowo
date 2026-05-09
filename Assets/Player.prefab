@@ -140,8 +140,12 @@ MonoBehaviour:
   syncMode: 0
   syncInterval: 0
   speed: 8
-  gravity: -9.81
-  jumpHeight: 1.5
+  gravity: 9.81
+  jumpForce: 5
+  friction: 6
+  groundAcceleration: 14
+  airAcceleration: 2000
+  maxAirSpeed: 2
   mouseSensitivity: 2
   playerCamera: {fileID: 4281602398910846671}
 --- !u!114 &458086107458672109

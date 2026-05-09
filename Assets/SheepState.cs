@@ -7,7 +7,11 @@ public class SheepState : NetworkBehaviour
     public Color currentColor = Color.white;
 
     [SyncVar] public string currentOwner = "";
-    [SyncVar] public int currentSheepValue = 1; // Ile punktów jest warta ta owca (1 lub 2)
+    [SyncVar] public int currentSheepValue = 1;
+
+    [Header("Dźwięki")]
+    public AudioSource audioSource;
+    public AudioClip hitSound; // Dźwięk, gdy owca obrywa owocem
 
     private Renderer[] allRenderers;
 
@@ -29,6 +33,15 @@ public class SheepState : NetworkBehaviour
                 r.material.color = newColor;
             }
         }
+
+        // --- NOWE: Odtwarzamy dźwięk trafienia u KAŻDEGO gracza ---
+        // Hook wykonuje się automatycznie u wszystkich, więc to idealne miejsce!
+        if (audioSource != null && hitSound != null)
+        {
+            // Zmieniamy lekko wysokość dźwięku (pitch), żeby każde trafienie brzmiało trochę inaczej
+            audioSource.pitch = Random.Range(0.9f, 1.1f);
+            audioSource.PlayOneShot(hitSound);
+        }
     }
 
     [Server]
@@ -36,23 +49,20 @@ public class SheepState : NetworkBehaviour
     {
         if (currentOwner == newOwnerName) return;
 
-        // 1. Odejmij punkty poprzedniemu właścicielowi (tyle ile owca była warta)
-        if (!string.IsNullOrEmpty(currentOwner))
+        if (!string.IsNullOrEmpty(currentOwner) && ScoreManager.Instance != null)
         {
-            if (ScoreManager.Instance != null)
-                ScoreManager.Instance.ChangeScore(currentOwner, -currentSheepValue);
+            ScoreManager.Instance.ChangeScore(currentOwner, -currentSheepValue);
         }
 
-        // 2. Oblicz nową wartość punktową (zależy od boostera rzucającego)
         int pointsToGive = isDoublePoints ? 2 : 1;
 
-        // 3. Dodaj punkty nowemu właścicielowi
         if (ScoreManager.Instance != null)
+        {
             ScoreManager.Instance.ChangeScore(newOwnerName, pointsToGive);
+        }
 
-        // 4. Zaktualizuj stan owcy
         currentOwner = newOwnerName;
-        currentSheepValue = pointsToGive; // Owca "zapamiętuje" swoją nową wartość
+        currentSheepValue = pointsToGive;
         currentColor = newColor;
     }
 }

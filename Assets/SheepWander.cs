@@ -3,53 +3,73 @@ using UnityEngine.AI;
 using Mirror;
 
 [RequireComponent(typeof(NavMeshAgent))]
-public class SheepWander : NetworkBehaviour 
+public class SheepWander : NetworkBehaviour
 {
     [Header("Ustawienia poruszania")]
     public float wanderRadius = 10f;
     public float wanderTimer = 3f;
 
+    [Header("Dźwięki otoczenia")]
+    public AudioSource audioSource;
+    public AudioClip[] baaSounds; // Tablica, żeby móc dodać kilka różnych wariantów beczenia
+    public float minBaaTime = 5f;
+    public float maxBaaTime = 15f;
+
+    private float baaTimer;
     private NavMeshAgent agent;
-    private float timer;
+    private float moveTimer;
 
-	void Start()
-	{
-		agent = GetComponent<NavMeshAgent>();
-		timer = wanderTimer;
+    void Start()
+    {
+        agent = GetComponent<NavMeshAgent>();
+        moveTimer = wanderTimer;
 
-		// === KLUCZOWY DODATEK MULTIPLAYER ===
-		// Jeśli ten skrypt uruchamia się u "Zwykłego Gracza" (Klienta), a nie na Serwerze/Hoście:
-		if (!isServer)
-		{
-			// Wyłączamy sztuczną inteligencję. U klientów owca to tylko "kukła", 
-			// którą przesuwa NetworkTransform na podstawie danych z serwera!
-			agent.enabled = false;
-		}
-	}
+        // Losujemy czas do pierwszego beczenia
+        baaTimer = Random.Range(minBaaTime, maxBaaTime);
+
+        if (!isServer)
+        {
+            agent.enabled = false;
+        }
+    }
 
     void Update()
     {
-        // Tylko serwer zarządza ruchem
         if (!isServer) return;
 
-        timer += Time.deltaTime;
-
-        if (timer >= wanderTimer)
+        // --- LOGIKA BECZENIA (Tylko Serwer odlicza i wysyła sygnał) ---
+        baaTimer -= Time.deltaTime;
+        if (baaTimer <= 0)
         {
-            // 1. Sprawdzamy, czy agent jest aktywny i czy stoi na NavMeshu
+            RpcPlayBaaSound(); // Wysyłamy sygnał do wszystkich graczy
+            baaTimer = Random.Range(minBaaTime, maxBaaTime); // Losujemy nowy czas
+        }
+
+        // --- LOGIKA CHODZENIA ---
+        moveTimer += Time.deltaTime;
+        if (moveTimer >= wanderTimer)
+        {
             if (agent != null && agent.isOnNavMesh)
             {
                 Vector3 newPos = RandomNavSphere(transform.position, wanderRadius, -1);
-                
-                // 2. ZABEZPIECZENIE: Sprawdzamy, czy wylosowany punkt jest prawidłowy
-                // Point.x == Infinity to najczęstszy powód błędu w konsoli
                 if (!float.IsInfinity(newPos.x))
                 {
                     agent.SetDestination(newPos);
                 }
             }
-            
-            timer = 0;
+            moveTimer = 0;
+        }
+    }
+
+    [ClientRpc]
+    void RpcPlayBaaSound()
+    {
+        // Ta funkcja wykonuje się u każdego klienta, odtwarzając dźwięk
+        if (audioSource != null && baaSounds.Length > 0)
+        {
+            AudioClip randomClip = baaSounds[Random.Range(0, baaSounds.Length)];
+            audioSource.pitch = Random.Range(0.85f, 1.15f); // Lekka modulacja głosu
+            audioSource.PlayOneShot(randomClip);
         }
     }
 
@@ -59,13 +79,10 @@ public class SheepWander : NetworkBehaviour
         randDirection += origin;
 
         NavMeshHit navHit;
-        // Szukamy najbliższego punktu na NavMeshu w promieniu 'dist'
         if (NavMesh.SamplePosition(randDirection, out navHit, dist, layermask))
         {
             return navHit.position;
         }
-
-        // Jeśli nie znaleziono punktu, zwracamy obecną pozycję (żeby nie było infinity)
         return origin;
     }
 }
