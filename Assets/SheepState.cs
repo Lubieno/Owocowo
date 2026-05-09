@@ -6,17 +6,18 @@ public class SheepState : NetworkBehaviour
     [SyncVar(hook = nameof(OnColorChanged))]
     public Color currentColor = Color.white;
 
+    // --- ZMIANA: Owca pamięta obecnego właściciela ---
+    [SyncVar] public string currentOwner = "";
+
     private Renderer[] allRenderers;
 
     void Awake()
     {
-        // Szukamy wszystkich rendererów (modelu z Blendera) pod owcą
         allRenderers = GetComponentsInChildren<Renderer>();
     }
 
     void OnColorChanged(Color oldColor, Color newColor)
     {
-        // Jeśli Renderery nie zostały znalezione w Awake, szukamy ich teraz
         if (allRenderers == null || allRenderers.Length == 0)
             allRenderers = GetComponentsInChildren<Renderer>();
 
@@ -24,24 +25,31 @@ public class SheepState : NetworkBehaviour
         {
             if (r != null)
             {
-                // --- KLUCZOWA ZMIANA: FILTROWANIE GŁOWY ---
-                // Sprawdzamy, czy nazwa obiektu zawiera słowo "Head" lub "Glowa".
-                // Jeśli Twój obiekt w Unity nazywa się inaczej (np. "SheepHead"), wpisz to tutaj!
-                if (r.gameObject.name.Contains("head"))
-                {
-                    continue; // To słowo sprawia, że skrypt pomija ten element i nie zmienia jego koloru
-                }
-
-                // Jeśli to nie jest głowa, normalnie zmieniamy kolor
+                if (r.gameObject.name.Contains("head")) continue;
                 r.material.color = newColor;
             }
         }
     }
 
     [Server]
-    public void ChangeColor(Color newColor)
+    public void ChangeColor(Color newColor, string newOwnerName)
     {
-        Debug.Log($"[SERWER] Zmieniam kolor owcy na: {newColor}");
+        // Jeśli ten sam gracz ponownie trafił swoją owcę, nic nie robimy
+        if (currentOwner == newOwnerName) return;
+
+        // Jeśli owca miała wcześniej innego właściciela, ODBIERZ MU PUNKT
+        if (!string.IsNullOrEmpty(currentOwner))
+        {
+            if (ScoreManager.Instance != null)
+                ScoreManager.Instance.ChangeScore(currentOwner, -1);
+        }
+
+        // Dodaj punkt NOWEMU właścicielowi
+        if (ScoreManager.Instance != null)
+            ScoreManager.Instance.ChangeScore(newOwnerName, 1);
+
+        // Zaktualizuj stan owcy
+        currentOwner = newOwnerName;
         currentColor = newColor;
     }
 }

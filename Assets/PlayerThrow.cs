@@ -16,7 +16,6 @@ public class PlayerThrow : NetworkBehaviour
 
     void Start()
     {
-        // Skrypt sam szuka punktu rzutu, tak jak zrobiliśmy to przed chwilą
         if (throwPoint == null)
         {
             throwPoint = transform.Find("MIEJSCE_RZUTU");
@@ -29,51 +28,47 @@ public class PlayerThrow : NetworkBehaviour
 
         if (Input.GetButtonDown("Fire1"))
         {
-            // KLUCZOWA ZMIANA: Zamiast strzelać laserem (który trafiał w gracza), 
-            // pobieramy po prostu wektor przodu naszej kamery!
-            CmdThrowFruit(fpsCamera.transform.forward, myPlayerColor);
+            // --- ZMIANA: Pobieramy nazwę gracza z systemu Profili ---
+            string myName = "Nieznajomy";
+            if (ProfileManager.Instance != null && ProfileManager.Instance.currentProfile != null)
+            {
+                myName = ProfileManager.Instance.currentProfile.playerName;
+            }
+
+            CmdThrowFruit(fpsCamera.transform.forward, myPlayerColor, myName);
         }
     }
 
     [Command]
-    void CmdThrowFruit(Vector3 lookDirection, Color colorToApply)
+    void CmdThrowFruit(Vector3 lookDirection, Color colorToApply, string throwerName)
     {
-        // 1. Zespawnuj obiekt
         GameObject projectile = Instantiate(fruitPrefab, throwPoint.position, throwPoint.rotation);
 
-        // 2. Ustaw kolor
         FruitCollision fruitLogic = projectile.GetComponent<FruitCollision>();
         if (fruitLogic != null)
         {
             fruitLogic.fruitColor = colorToApply;
+            // --- ZMIANA: Przekazujemy nazwę rzucającego do owocu ---
+            fruitLogic.throwerName = throwerName;
         }
 
-        // 3. NAJPIERW pojawiamy pocisk w sieci
         NetworkServer.Spawn(projectile);
 
-        // 4. POTEM nadajemy mu fizykę na serwerze
         Rigidbody rb = projectile.GetComponent<Rigidbody>();
         if (rb != null)
         {
             rb.isKinematic = false;
-
-            // Nadajemy prędkość w kierunku patrzenia kamery + lekko w górę
             Vector3 forceDirection = lookDirection * throwForce;
             forceDirection += Vector3.up * upwardForce;
-
-            rb.linearVelocity = forceDirection;
+            rb.linearVelocity = forceDirection; // używam standardowego .velocity dla starszych wersji, ale linearVelocity jest super w Unity 6
         }
 
-        // 5. Uruchamiamy odliczanie do zniszczenia pocisku
         StartCoroutine(DestroyProjectileCoroutine(projectile, destroyTime));
     }
 
     private System.Collections.IEnumerator DestroyProjectileCoroutine(GameObject proj, float delay)
     {
         yield return new WaitForSeconds(delay);
-        if (proj != null)
-        {
-            NetworkServer.Destroy(proj);
-        }
+        if (proj != null) NetworkServer.Destroy(proj);
     }
 }
