@@ -5,9 +5,9 @@ using Mirror;
 public class PlayerMovement : NetworkBehaviour
 {
     [Header("Ustawienia ruchu")]
-    [SyncVar] public float speed = 8f;
+    [SyncVar] public float speed = 8f; // Zsynchronizowane do boosterów
     public float gravity = -9.81f;
-    public float jumpHeight = 3f; // NOWE: Zmienna określająca wysokość skoku w metrach
+    public float jumpHeight = 3f;
 
     [Header("Ustawienia kamery (FPS)")]
     public float mouseSensitivity = 2f;
@@ -21,9 +21,6 @@ public class PlayerMovement : NetworkBehaviour
     {
         controller = GetComponent<CharacterController>();
 
-        // ==========================================
-        // KLUCZOWA ZMIANA SIECIOWA
-        // ==========================================
         if (!isLocalPlayer)
         {
             if (playerCamera != null)
@@ -42,42 +39,50 @@ public class PlayerMovement : NetworkBehaviour
     {
         if (!isLocalPlayer) return;
 
-        // 1. Sprawdzenie ziemi na samym początku klatki
+        // 1. Sprawdzenie ziemi
         bool groundedPlayer = controller.isGrounded;
-
         if (groundedPlayer && velocity.y < 0)
         {
-            // Ważne: dajemy -2f, żeby postać była "dociskana" do ziemi.
-            // Jeśli dasz 0, isGrounded będzie migać (true/false).
             velocity.y = -2f;
         }
 
-        // 2. Rozglądanie się (bez zmian)
-        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
-        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
+        // Zmienne sterujące - domyślnie 0 (brak ruchu)
+        float x = 0f;
+        float z = 0f;
+        float mouseX = 0f;
+        float mouseY = 0f;
+        bool jumpPressed = false;
+
+        // --- KLUCZOWA ZMIANA ---
+        // Zczytujemy klawiaturę i myszkę TYLKO wtedy, gdy menu NIE jest zapauzowane
+        if (!PauseMenu.isPaused)
+        {
+            x = Input.GetAxis("Horizontal");
+            z = Input.GetAxis("Vertical");
+            mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
+            mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
+            jumpPressed = Input.GetButtonDown("Jump");
+        }
+
+        // 2. Rozglądanie się (jeśli zapauzowane, mouseX i mouseY wynoszą 0, więc kamera stoi)
         xRotation -= mouseY;
         xRotation = Mathf.Clamp(xRotation, -90f, 90f);
         if (playerCamera != null) playerCamera.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
         transform.Rotate(Vector3.up * mouseX);
 
-        // 3. Obliczanie kierunku chodzenia
-        float x = Input.GetAxis("Horizontal");
-        float z = Input.GetAxis("Vertical");
+        // 3. Obliczanie kierunku chodzenia (jeśli zapauzowane, x i z wynoszą 0, więc nie idziemy)
         Vector3 moveDirection = transform.right * x + transform.forward * z;
 
         // 4. Skakanie
-        // Sprawdzamy groundedPlayer, które pobraliśmy na początku klatki
-        if (Input.GetButtonDown("Jump") && groundedPlayer)
+        if (jumpPressed && groundedPlayer)
         {
-            // Wzór na skok: pierwiastek z (wysokość * -2 * grawitacja)
             velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
         }
 
-        // 5. Aplikowanie grawitacji do prędkości pionowej
+        // 5. Aplikowanie grawitacji (DZIAŁA ZAWSZE, NAWET W MENU!)
         velocity.y += gravity * Time.deltaTime;
 
-        // 6. KLUCZ: Łączymy ruch poziomy i pionowy w JEDEN wykonany ruch
-        // To gwarantuje, że grawitacja zawsze "pcha" nas w ziemię, aktualizując isGrounded
+        // 6. Wykonanie ruchu (DZIAŁA ZAWSZE, uziemiając gracza)
         Vector3 finalMove = moveDirection * speed + velocity;
         controller.Move(finalMove * Time.deltaTime);
     }

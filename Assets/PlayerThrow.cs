@@ -26,6 +26,8 @@ public class PlayerThrow : NetworkBehaviour
     {
         if (!isLocalPlayer) return;
 
+        if (PauseMenu.isPaused) return;
+
         if (Input.GetButtonDown("Fire1"))
         {
             // Pobieramy nazwę gracza z profilu
