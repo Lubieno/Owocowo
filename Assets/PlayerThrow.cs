@@ -1,9 +1,10 @@
 using UnityEngine;
 using Mirror;
+using UnityEngine.SceneManagement;
 
 public class PlayerThrow : NetworkBehaviour
 {
-    [Header("Ustawienia gracza")]
+    [Header("Ustawienia gracza (Awaryjne)")]
     public Color myPlayerColor = Color.blue;
 
     [Header("Ustawienia rzutu")]
@@ -16,32 +17,29 @@ public class PlayerThrow : NetworkBehaviour
 
     void Start()
     {
-        if (throwPoint == null)
-        {
-            throwPoint = transform.Find("MIEJSCE_RZUTU");
-        }
+        if (throwPoint == null) throwPoint = transform.Find("MIEJSCE_RZUTU");
     }
 
     void Update()
     {
+        if (SceneManager.GetActiveScene().name == "LobbyScene") return;
         if (!isLocalPlayer) return;
-
         if (PauseMenu.isPaused) return;
 
         if (Input.GetButtonDown("Fire1"))
         {
-            // Pobieramy nazwę gracza z profilu
-            string myName = "Nieznajomy";
-            if (ProfileManager.Instance != null && ProfileManager.Instance.currentProfile != null)
-            {
-                myName = ProfileManager.Instance.currentProfile.playerName;
-            }
+            LobbyPlayer myLobbyData = GetComponent<LobbyPlayer>();
 
-            // Sprawdzamy czy mamy booster podwójnych punktów
+            string myName = myLobbyData != null ? myLobbyData.playerName : "Nieznajomy";
+            Color myColor = myLobbyData != null ? myLobbyData.playerColor : myPlayerColor;
+
+            // Log testowy - zobacz w konsoli, co tu się wyświetli podczas strzelania!
+            Debug.Log($"Rzucam owoc! Mój wybrany kolor to: {myColor}");
+
             PlayerEffects effects = GetComponent<PlayerEffects>();
             bool isDouble = (effects != null && effects.hasScoreMultiplier);
 
-            CmdThrowFruit(fpsCamera.transform.forward, myPlayerColor, myName, isDouble);
+            CmdThrowFruit(fpsCamera.transform.forward, myColor, myName, isDouble);
         }
     }
 
@@ -55,7 +53,7 @@ public class PlayerThrow : NetworkBehaviour
         {
             fruitLogic.fruitColor = colorToApply;
             fruitLogic.throwerName = throwerName;
-            fruitLogic.doublePoints = isDoublePoints; // Przekazujemy info o boosterze do pocisku
+            fruitLogic.doublePoints = isDoublePoints;
         }
 
         NetworkServer.Spawn(projectile);

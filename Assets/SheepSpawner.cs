@@ -1,14 +1,12 @@
 using UnityEngine;
-using Mirror; // DODANO
+using Mirror;
 
-public class SheepSpawner : NetworkBehaviour // ZMIANA
+public class SheepSpawner : NetworkBehaviour
 {
-    [Header("Ustawienia spawnu")]
     public GameObject sheepPrefab;
     public int initialSheepCount = 10;
     public float spawnRadius = 20f;
 
-    // Używamy OnStartServer zamiast Start - odpali się tylko u Hosta
     public override void OnStartServer()
     {
         for (int i = 0; i < initialSheepCount; i++)
@@ -24,8 +22,6 @@ public class SheepSpawner : NetworkBehaviour // ZMIANA
         randomPos.y = 0;
 
         GameObject spawnedSheep = Instantiate(sheepPrefab, randomPos, Quaternion.identity);
-
-        // KLUCZOWE: Mówimy Mirrorowi "Hej, stworzyłem owcę, pokaż ją wszystkim!"
         NetworkServer.Spawn(spawnedSheep);
     }
 

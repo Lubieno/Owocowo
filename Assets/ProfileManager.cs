@@ -2,15 +2,12 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.IO;
 
-// Klasa przechowująca dane pojedynczego profilu
 [System.Serializable]
 public class PlayerProfile
 {
     public string playerName;
-    // Tutaj w przyszłości możemy dodać np. level, statystyki, wybrany kolor itp.
 }
 
-// Opakowanie dla listy profili (potrzebne, bo Unity JsonUtility nie radzi sobie z samymi listami)
 [System.Serializable]
 public class ProfileDataWrapper
 {
@@ -19,22 +16,22 @@ public class ProfileDataWrapper
 
 public class ProfileManager : MonoBehaviour
 {
-    public static ProfileManager Instance; // Singleton - dostęp z każdego miejsca w kodzie
+    public static ProfileManager Instance;
 
     public ProfileDataWrapper dataWrapper = new ProfileDataWrapper();
-    public PlayerProfile currentProfile; // Aktualnie wybrany profil
+    public PlayerProfile currentProfile;
+
+    // --- NOWOŚĆ: Zmienna-plecak przechowująca kolor przy zmianie sceny! ---
+    public Color currentSessionColor = Color.blue;
 
     private string saveFilePath;
 
     void Awake()
     {
-        // Gwarantujemy, że istnieje tylko JEDEN ProfileManager w całej grze
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject); // Ten obiekt nie zniknie przy zmianie sceny!
-
-            // Ścieżka zapisu (w Windowsie to np. AppData/LocalLow/NazwaFirmy/NazwaGry)
+            DontDestroyOnLoad(gameObject);
             saveFilePath = Application.persistentDataPath + "/profiles.json";
             LoadProfiles();
         }
@@ -48,7 +45,6 @@ public class ProfileManager : MonoBehaviour
     {
         string json = JsonUtility.ToJson(dataWrapper, true);
         File.WriteAllText(saveFilePath, json);
-        Debug.Log("Zapisano profile do: " + saveFilePath);
     }
 
     public void LoadProfiles()
@@ -60,7 +56,7 @@ public class ProfileManager : MonoBehaviour
         }
         else
         {
-            dataWrapper = new ProfileDataWrapper(); // Brak pliku = pusta lista
+            dataWrapper = new ProfileDataWrapper();
         }
     }
 

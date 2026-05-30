@@ -158,7 +158,9 @@ MonoBehaviour:
   syncDirection: 0
   syncMode: 0
   syncInterval: 0
-  fruitColor: {r: 0, g: 0, b: 1, a: 1}
+  fruitColor: {r: 0.6980392, g: 0.1333333, b: 0.1333333, a: 1}
+  throwerName: 
+  doublePoints: 0
 --- !u!114 &-5191503532926008215
 MonoBehaviour:
   m_ObjectHideFlags: 0

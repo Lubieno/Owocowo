@@ -1,5 +1,6 @@
 using UnityEngine;
 using Mirror;
+using UnityEngine.SceneManagement;
 
 [RequireComponent(typeof(CharacterController))]
 public class PlayerMovement : NetworkBehaviour
@@ -10,10 +11,8 @@ public class PlayerMovement : NetworkBehaviour
     [Header("Fizyka w stylu CS:GO")]
     public float gravity = 20f;
     public float jumpForce = 8f;
-    public float friction = 6f; // Tarcie na ziemi
+    public float friction = 6f;
     public float groundAcceleration = 14f;
-
-    // Magia Bhopa - te dwie wartości decydują o airstrafingu!
     public float airAcceleration = 2000f;
     public float maxAirSpeed = 2f;
 
@@ -39,12 +38,25 @@ public class PlayerMovement : NetworkBehaviour
         }
         else
         {
-            Cursor.lockState = CursorLockMode.Locked;
+            // ZMIANA: Sprawdzamy czy jesteśmy w Lobby, żeby uwolnić kursor
+            if (SceneManager.GetActiveScene().name == "LobbyScene")
+            {
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = true;
+            }
+            else
+            {
+                Cursor.lockState = CursorLockMode.Locked;
+                Cursor.visible = false;
+            }
         }
     }
 
     void Update()
     {
+        // ZMIANA: Zablokuj całkowicie chodzenie i rozglądanie się TYLKO, jeśli jesteśmy w Lobby!
+        if (SceneManager.GetActiveScene().name == "LobbyScene") return;
+
         if (!isLocalPlayer) return;
 
         float x = 0f;
@@ -55,87 +67,50 @@ public class PlayerMovement : NetworkBehaviour
 
         if (!PauseMenu.isPaused)
         {
-            // UWAGA: Używamy GetAxisRaw zamiast GetAxis, żeby usunąć sztuczne opóźnienie klawiatury Unity
             x = Input.GetAxisRaw("Horizontal");
             z = Input.GetAxisRaw("Vertical");
-
             mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
             mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
-
-            // Auto-Bhop (Trzymając spację, skaczesz od razu). 
-            // Jeśli chcesz trudnego, klasycznego bhopa z CS'a, zmień GetButton na GetButtonDown!
             jumpPressed = Input.GetButton("Jump");
         }
 
-        // Rozglądanie się kamery
         xRotation -= mouseY;
         xRotation = Mathf.Clamp(xRotation, -90f, 90f);
         if (playerCamera != null) playerCamera.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
         transform.Rotate(Vector3.up * mouseX);
 
-        // Chciany kierunek ruchu (WishDir)
         Vector3 wishDir = transform.right * x + transform.forward * z;
         wishDir.Normalize();
 
-        // Serce silnika fizycznego - podział na ziemię i powietrze
-        if (controller.isGrounded)
-        {
-            GroundMove(wishDir, jumpPressed);
-        }
-        else
-        {
-            AirMove(wishDir);
-        }
+        if (controller.isGrounded) GroundMove(wishDir, jumpPressed);
+        else AirMove(wishDir);
 
-        // Fizyczne przesunięcie postaci
         controller.Move(velocity * Time.deltaTime);
     }
 
-    // --- FIZYKA ZIEMI ---
     void GroundMove(Vector3 wishDir, bool jumpPressed)
     {
-        ApplyFriction(); // Tarcie działa tylko na ziemi
-
-        // Zwiększamy prędkość do wartości "speed" (limit, który boostery mogą zmieniać)
+        ApplyFriction();
         Accelerate(wishDir, speed, groundAcceleration);
-
-        // Lekkie dociskanie do ziemi, żeby nie skakać na mikroskopijnych nierównościach
         velocity.y = -2f;
-
-        if (jumpPressed)
-        {
-            velocity.y = jumpForce; // Wybicie w powietrze!
-        }
+        if (jumpPressed) velocity.y = jumpForce;
     }
 
-    // --- FIZYKA POWIETRZA ---
     void AirMove(Vector3 wishDir)
     {
-        // W powietrzu używamy ogromnego przyspieszenia (airAcceleration), 
-        // ale bardzo małego limitu bezpośredniej prędkości z klawiszy (maxAirSpeed).
-        // To zmusza gracza do skręcania kamerą, aby budować prędkość!
         Accelerate(wishDir, maxAirSpeed, airAcceleration);
-
-        // Grawitacja
         velocity.y -= gravity * Time.deltaTime;
     }
 
-    // --- MATEMATYKA SILNIKA SOURCE (Quake / CS:GO) ---
     void Accelerate(Vector3 wishDir, float wishSpeed, float accel)
     {
-        // Sprawdzamy, ile prędkości już mamy w chcianym kierunku
         float currentSpeed = Vector3.Dot(new Vector3(velocity.x, 0, velocity.z), wishDir);
-
-        // Ile brakuje nam do limitu?
         float addSpeed = wishSpeed - currentSpeed;
+        if (addSpeed <= 0) return;
 
-        if (addSpeed <= 0) return; // Jeśli przekraczamy limit w tym kierunku, nie dodajemy sztucznie więcej
-
-        // Obliczamy przyspieszenie dla tej klatki
         float accelSpeed = accel * Time.deltaTime * wishSpeed;
         if (accelSpeed > addSpeed) accelSpeed = addSpeed;
 
-        // Dodajemy wyliczoną prędkość do głównego wektora
         velocity.x += wishDir.x * accelSpeed;
         velocity.z += wishDir.z * accelSpeed;
     }
@@ -143,11 +118,10 @@ public class PlayerMovement : NetworkBehaviour
     void ApplyFriction()
     {
         Vector3 vec = velocity;
-        vec.y = 0f; // Tarcie nie wpływa na spadanie
+        vec.y = 0f;
         float speedMag = vec.magnitude;
         float drop = 0f;
 
-        // Im szybciej biegniesz, tym mocniej działa tarcie
         if (controller.isGrounded)
         {
             float control = speedMag < friction ? friction : speedMag;
@@ -158,7 +132,6 @@ public class PlayerMovement : NetworkBehaviour
         if (newSpeed < 0) newSpeed = 0;
         if (speedMag > 0) newSpeed /= speedMag;
 
-        // Skalowanie wektora po odjęciu tarcia
         velocity.x *= newSpeed;
         velocity.z *= newSpeed;
     }

@@ -16,20 +16,16 @@ public class BoosterSpawner : NetworkBehaviour
         timer += Time.deltaTime;
         if (timer >= spawnInterval)
         {
-            for (int i = 0; i < boostersAtOnce; i++)
-            {
-                SpawnBooster();
-            }
+            for (int i = 0; i < boostersAtOnce; i++) SpawnBooster();
             timer = 0;
         }
     }
 
     void SpawnBooster()
     {
-        // Losowanie pozycji wewnątrz sfery wokół spawnera
         Vector3 randomPos = Random.insideUnitSphere * spawnRadius;
         randomPos += transform.position;
-        randomPos.y = 1f; // Ustawiamy na stałej wysokości nad ziemią
+        randomPos.y = 1f;
 
         GameObject b = Instantiate(boosterPrefab, randomPos, Quaternion.identity);
         NetworkServer.Spawn(b);

@@ -11,7 +11,7 @@ public class SheepState : NetworkBehaviour
 
     [Header("Dźwięki")]
     public AudioSource audioSource;
-    public AudioClip hitSound; // Dźwięk, gdy owca obrywa owocem
+    public AudioClip hitSound;
 
     private Renderer[] allRenderers;
 
@@ -20,7 +20,25 @@ public class SheepState : NetworkBehaviour
         allRenderers = GetComponentsInChildren<Renderer>();
     }
 
+    public override void OnStartClient()
+    {
+        // Kiedy gracz dołącza w trakcie gry, musi widzieć prawidłowe kolory owiec
+        ApplyColorToSheep(currentColor);
+    }
+
     void OnColorChanged(Color oldColor, Color newColor)
+    {
+        ApplyColorToSheep(newColor);
+
+        if (audioSource != null && hitSound != null)
+        {
+            audioSource.pitch = Random.Range(0.9f, 1.1f);
+            audioSource.PlayOneShot(hitSound);
+        }
+    }
+
+    // Nowa, oddzielna funkcja bezpiecznie przypisująca kolor
+    void ApplyColorToSheep(Color colorToSet)
     {
         if (allRenderers == null || allRenderers.Length == 0)
             allRenderers = GetComponentsInChildren<Renderer>();
@@ -30,17 +48,8 @@ public class SheepState : NetworkBehaviour
             if (r != null)
             {
                 if (r.gameObject.name.Contains("head")) continue;
-                r.material.color = newColor;
+                r.material.color = colorToSet;
             }
-        }
-
-        // --- NOWE: Odtwarzamy dźwięk trafienia u KAŻDEGO gracza ---
-        // Hook wykonuje się automatycznie u wszystkich, więc to idealne miejsce!
-        if (audioSource != null && hitSound != null)
-        {
-            // Zmieniamy lekko wysokość dźwięku (pitch), żeby każde trafienie brzmiało trochę inaczej
-            audioSource.pitch = Random.Range(0.9f, 1.1f);
-            audioSource.PlayOneShot(hitSound);
         }
     }
 
@@ -63,6 +72,8 @@ public class SheepState : NetworkBehaviour
 
         currentOwner = newOwnerName;
         currentSheepValue = pointsToGive;
+
+        // Zmiana SyncVar - to automatycznie odpali 'OnColorChanged' u każdego
         currentColor = newColor;
     }
 }
