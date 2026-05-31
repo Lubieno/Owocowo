@@ -450,6 +450,7 @@ GameObject:
   - component: {fileID: 233007921}
   - component: {fileID: 233007920}
   - component: {fileID: 233007919}
+  - component: {fileID: 233007922}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -541,6 +542,20 @@ Canvas:
   m_SortingLayerID: 0
   m_SortingOrder: 0
   m_TargetDisplay: 0
+--- !u!114 &233007922
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 233007917}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 89ee17f4c49449c4bb9b6c9c182494ee, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GlobalButtonSounds
+  clickSound: {fileID: 8300000, guid: 7d42194709255294ab72acfcbb4b5e64, type: 3}
+  hoverSound: {fileID: 8300000, guid: c6c230a088b17ca4e89710d744e104ec, type: 3}
 --- !u!1 &248779273
 GameObject:
   m_ObjectHideFlags: 0
