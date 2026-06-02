@@ -16,7 +16,16 @@ public class ScoreboardUI : MonoBehaviour
 
     void Start()
     {
-        scoreboardText.text = "<b>WYNIKI:</b>\n<i>Czekam na graczy...</i>";
+        // Zamiast na sztywno wpisywać "Czekam na graczy", najpierw sprawdzamy, 
+        // czy serwer zdążył nam już przysłać jakieś zera!
+        if (ScoreManager.Instance != null && ScoreManager.Instance.playerScores.Count > 0)
+        {
+            UpdateScoreboard(ScoreManager.Instance.playerScores);
+        }
+        else
+        {
+            scoreboardText.text = "<b>WYNIKI:</b>\n<i>Czekam na graczy...</i>";
+        }
     }
 
     // Wywoływane automatycznie przez ScoreManager
@@ -26,8 +35,13 @@ public class ScoreboardUI : MonoBehaviour
 
         foreach (var score in scores)
         {
-            // Budujemy linijkę, np: "Gracz1: 5 owiec"
             newText += $"{score.Key}: {score.Value}\n";
+        }
+
+        // Zabezpieczenie, gdyby mapa faktycznie była jeszcze całkowicie pusta
+        if (scores.Count == 0)
+        {
+            newText += "<i>Czekam na graczy...</i>";
         }
 
         scoreboardText.text = newText;
