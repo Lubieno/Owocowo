@@ -7689,7 +7689,7 @@ MonoBehaviour:
   syncDirection: 0
   syncMode: 0
   syncInterval: 0
-  matchDuration: 20
+  matchDuration: 60
   timerText: {fileID: 1291832704}
   postGamePanel: {fileID: 1939617080}
   postGameScoreText: {fileID: 262253201}
@@ -11227,7 +11227,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: -6735793009185934161, guid: 25f03344dfdd844f88e89487c558fe35, type: 3}
+  - {fileID: 2100000, guid: 2c9f5251ec4313d3d8a60ff5c441fab2, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

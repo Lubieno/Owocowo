@@ -20,6 +20,9 @@ public class PlayerMovement : NetworkBehaviour
     public float mouseSensitivity = 2f;
     public Transform playerCamera;
 
+    [Header("Animacje")]
+    public Animator animator; // ZMIANA: Dodana referencja do komponentu Animator
+
     private CharacterController controller;
     private Vector3 velocity;
     private float xRotation = 0f;
@@ -86,6 +89,17 @@ public class PlayerMovement : NetworkBehaviour
         else AirMove(wishDir);
 
         controller.Move(velocity * Time.deltaTime);
+
+        // ZMIANA: Przekazywanie informacji o ruchu do Animatora
+        if (animator != null)
+        {
+            // Ustaw isRunning na true, jeśli gracz wciska klawisze ruchu (x lub z nie jest zerem)
+            bool isMoving = (x != 0 || z != 0);
+            animator.SetBool("isRunning", isMoving);
+
+            // Ustaw isJumping na true, jeśli postać nie dotyka ziemi
+            animator.SetBool("isJumping", !controller.isGrounded);
+        }
     }
 
     void GroundMove(Vector3 wishDir, bool jumpPressed)
